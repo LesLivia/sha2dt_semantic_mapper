@@ -1,0 +1,12 @@
+{
+  "fixed_links": [
+    {
+      "from": "edge",
+      "to": "activity"
+    },
+    {
+      "from": "location",
+      "to": "station"
+    }
+  ]
+}
