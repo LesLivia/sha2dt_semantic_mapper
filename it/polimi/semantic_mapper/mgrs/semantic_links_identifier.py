@@ -28,7 +28,7 @@ class Identifier:
         edge_links: List[Link] = []
         labels_dict: Dict[str, str] = {}
 
-        with (open(AUTOMATON_META_PATH) as auto_meta):
+        with open(AUTOMATON_META_PATH) as auto_meta:
             lines = auto_meta.readlines()
             start_index = lines.index('--EVENT LABELS DICT--\n')
             end_index = lines.index('--OBSERVABLE EVENTS--\n')
@@ -41,16 +41,25 @@ class Identifier:
 
         driver = conn.get_driver()
         reader: Skg_Reader = Skg_Reader(driver)
-        if to == 'activity':
+        if to.lower() == 'activity':
             target_entities = reader.get_activities()
+        elif to.lower() == 'sensor':
+            target_entities = reader.get_entities_by_labels(['Sensor'])
 
         for edge in self.automaton.edges:
-            target = [e for e in target_entities if e.act == labels_dict[edge.label]]
+            if to.lower() == 'activity':
+                target = [e for e in target_entities if e.act == labels_dict[edge.label]]
+            elif to.lower() == 'sensor':
+                target = [e for e in target_entities if e.entity_id in labels_dict[edge.label]]
+
             if len(target) <= 0:
                 LOGGER.error('Cannot establish link for {}.'.format(edge.label))
             else:
                 auto_feat = Automaton_Feature(e=edge)
-                skg_feat = SKG_Feature(a=target[0])
+                if to.lower() == 'activity':
+                    skg_feat = SKG_Feature(a=target[0])
+                elif to.lower() == 'sensor':
+                    skg_feat = SKG_Feature(e=target[0])
                 edge_links.append(Link(name, [auto_feat], [skg_feat]))
 
         return edge_links
@@ -59,7 +68,7 @@ class Identifier:
         links: List[Link] = []
 
         for mapping in LINKS_CONFIG['fixed_links']:
-            if mapping['from'] == 'edge':
+            if mapping['from'].lower() == 'edge':
                 links.extend(self.identify_edge_links(mapping['to'], mapping['rel_name']))
 
         LOGGER.info('Identified {} semantic links.'.format(len(links)))

@@ -3,7 +3,7 @@
     {
       "rel_name": "LABELED_BY",
       "from": "edge",
-      "to": "activity"
+      "to": "sensor"
     },
     {
       "rel_name": "MODELS",
