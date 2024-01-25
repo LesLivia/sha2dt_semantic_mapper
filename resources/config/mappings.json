@@ -3,12 +3,12 @@
     {
       "rel_name": "LABELED_BY",
       "from": "edge",
-      "to": "sensor"
+      "to": "Sensor"
     },
     {
       "rel_name": "MODELS",
       "from": "location",
-      "to": "station"
+      "to": "Station"
     }
   ]
 }

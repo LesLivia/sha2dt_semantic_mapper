@@ -25,8 +25,13 @@ driver = conn.get_driver()
 writer: Skg_Writer = Skg_Writer(driver)
 
 for link in links:
-    writer.create_semantic_link(AUTOMATON, name=link.name, edge=link.aut_feat[0].edge,
-                                ent=link.skg_feat[0].entity, entity_labels=['Sensor'])
+    if link.aut_feat[0].edge is not None:
+        writer.create_semantic_link(AUTOMATON, name=link.name, edge=link.aut_feat[0].edge,
+                                    ent=link.skg_feat[0].entity, entity_labels=['Sensor'])
+    else:
+        writer.create_semantic_link(AUTOMATON, name=link.name, loc=link.aut_feat[0].loc,
+                                    ent=link.skg_feat[0].entity, entity_labels=['Station'])
 
+driver.close()
 
 LOGGER.info('Done.')
