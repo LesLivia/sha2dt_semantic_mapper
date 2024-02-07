@@ -14,7 +14,7 @@ AUTOMATON_PATH = config['AUTOMATON']['automaton.graph.path'].format(AUTOMATON_NA
 
 LOGGER = Logger('Main')
 
-AUTOMATON = Automaton("AUTO_TWIN_SKG_501_source", AUTOMATON_PATH)
+AUTOMATON = Automaton("AUTO_TWIN_SKG_301_source", AUTOMATON_PATH)
 
 LOGGER.info('Loaded automaton.')
 
