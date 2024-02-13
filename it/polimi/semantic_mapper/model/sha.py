@@ -60,10 +60,6 @@ class Edge:
         start = [l for l in locations if l.name == start_name][0]
         dest = [l for l in locations if l.name == dest_name][0]
         sync = line.split('COLOR="#0067b0">')[1].replace('</FONT>>]\n', '') + '!'
-        # if sync_label in ['i_0', 'l', 'u']:
-        #     sync = sync_label + '?'
-        # else:
-        #     sync = 'm[' + sync_label.split('_')[1] + ']?'
 
         return Edge(start, dest, sync)
 

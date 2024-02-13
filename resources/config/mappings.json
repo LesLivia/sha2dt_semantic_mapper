@@ -3,7 +3,8 @@
     {
       "rel_name": "LABELED_BY",
       "from": "edge",
-      "to": "Sensor"
+      "to": "Sensor",
+      "format": "Pass Sensor {}"
     },
     {
       "rel_name": "MODELS",

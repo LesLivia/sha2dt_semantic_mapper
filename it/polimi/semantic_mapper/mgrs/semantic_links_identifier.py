@@ -24,7 +24,7 @@ class Identifier:
     def __init__(self, a: Automaton):
         self.automaton = a
 
-    def identify_edge_links(self, to: str, name: str):
+    def identify_edge_links(self, to: str, name: str, format_str: str):
         edge_links: List[Link] = []
         labels_dict: Dict[str, str] = {}
 
@@ -50,7 +50,7 @@ class Identifier:
             if to.lower() == 'activity':
                 target = [e for e in target_entities if e.act == labels_dict[edge.label]]
             elif to.lower() == 'sensor':
-                target = [e for e in target_entities if e.entity_id in labels_dict[edge.label]]
+                target = [e for e in target_entities if format_str.format(e.entity_id) == labels_dict[edge.label]]
 
             if len(target) <= 0:
                 LOGGER.error('Cannot establish link for {}.'.format(edge.label))
@@ -106,7 +106,7 @@ class Identifier:
         for mapping in LINKS_CONFIG['fixed_links']:
             if mapping['from'].lower() == 'edge':
                 edge_to = mapping['to']
-                edge_links = self.identify_edge_links(mapping['to'], mapping['rel_name'])
+                edge_links = self.identify_edge_links(mapping['to'], mapping['rel_name'], mapping['format'])
                 links.extend(edge_links)
             elif mapping['from'].lower() == 'location':
                 links.extend(self.identify_location_links(mapping['to'], mapping['rel_name'], edge_to, edge_links))

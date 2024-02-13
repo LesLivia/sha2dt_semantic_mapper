@@ -1,7 +1,9 @@
 import configparser
+from typing import List, Dict
 
 from it.polimi.semantic_mapper.logger.logger import Logger
-from it.polimi.semantic_mapper.model.sha import SHA
+from it.polimi.semantic_mapper.model.semantic_link import Link
+from it.polimi.semantic_mapper.model.sha import SHA, Edge, Location
 
 config = configparser.ConfigParser()
 config.sections()
@@ -9,7 +11,7 @@ config.read('./resources/config/config.ini')
 config.sections()
 
 N = 10
-TAU = 100
+TAU = 10
 
 LOGGER = Logger('UppaalModelGenerator')
 
@@ -30,12 +32,33 @@ Y_START = 0
 Y_RANGE = 300
 
 EDGE_TPLT = """<transition>\n\t<source ref="{}"/>\n\t<target ref="{}"/>
-\t<label kind="synchronisation" x="{}" y="{}">{}</label>\n</transition>"""
+\t<label kind="synchronisation" x="{}" y="{}">{}</label>\n
+\t<label kind="assignment" x="{}" y="{}">update_entities({}, {})</label>\n
+</transition>"""
 
 SAVE_PATH = config['MODEL GENERATION']['save.path']
 
 
-def sha_to_upp_tplt(learned_sha: SHA):
+def process_links(links: List[Link], edge: Edge, target: Location,
+                  entity_to_int: Dict[str, int]):
+    sync = edge.sync.replace('!', '')
+    loc_entity = 1
+    edge_entity = 1
+    for link in links:
+        link_edge = link.aut_feat[0].edge
+        link_entity = link.skg_feat[0].entity
+        if link_edge is not None and link_edge.label == sync:
+            edge_entity = entity_to_int[link_entity.entity_id]
+
+    return loc_entity, edge_entity
+
+
+def get_dicts(links: List[Link]):
+    ent_list = list(set([link.skg_feat[0].entity.entity_id for link in links]))
+    return {x: i for i, x in enumerate(ent_list)}
+
+
+def sha_to_upp_tplt(learned_sha: SHA, links: List[Link]):
     machine_path = NTA_TPLT_PATH + MACHINE_TPLT_NAME
     with open(machine_path, 'r') as machine_tplt:
         lines = machine_tplt.readlines()
@@ -69,9 +92,14 @@ def sha_to_upp_tplt(learned_sha: SHA):
         mid_x = abs(x1 - x2) / 2 + min(x1, x2)
         mid_y = abs(y1 - y2) / 2 + min(y1, y2)
 
-        new_edge_str = EDGE_TPLT.format(start_id, dest_id, mid_x, mid_y, edge.sync, mid_x, mid_y + 10)
+        link_params = process_links(links, edge, edge.dest, get_dicts(links))
+        new_edge_str = EDGE_TPLT.format(start_id, dest_id, mid_x, mid_y, edge.sync, mid_x,
+                                        mid_y + 10, link_params[0], link_params[1])
         edges_str += new_edge_str
     learned_sha_tplt = learned_sha_tplt.replace('**TRANSITIONS**', edges_str)
+
+    entity_dict = ['{}: {}'.format(x, get_dicts(links)[x]) for x in get_dicts(links)]
+    learned_sha_tplt = learned_sha_tplt.replace('**DICT**', '\n'.join(entity_dict))
 
     return learned_sha_tplt
 
@@ -81,12 +109,12 @@ def generate_query_file(name: str):
         q_file.write(QUERY_TPLT.replace('{}', str(N)))
 
 
-def generate_upp_model(learned_sha: SHA, name: str):
+def generate_upp_model(learned_sha: SHA, name: str, links: List[Link]):
     LOGGER.info("Starting Uppaal model generation...")
 
     # Learned SHA Management
 
-    learned_sha_tplt = sha_to_upp_tplt(learned_sha)
+    learned_sha_tplt = sha_to_upp_tplt(learned_sha, links)
 
     nta_path = NTA_TPLT_PATH + NTA_TPLT_NAME
     with open(nta_path, 'r') as nta_tplt:

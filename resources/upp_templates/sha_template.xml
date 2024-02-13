@@ -1,5 +1,16 @@
 <template>
 <name>DiscoveredSystem</name>
 <declaration>
+int loc_entity = 0;
+int edge_entity = 0;
+
+/**
+**DICT**
+**/
+
+void update_entities(int loc, int edge) {
+    loc_entity = loc;
+    edge_entity = edge;
+}
 </declaration>
 **LOCATIONS**<init ref="**INIT_ID**"/>**TRANSITIONS**</template>
