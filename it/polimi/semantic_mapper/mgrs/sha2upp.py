@@ -46,9 +46,12 @@ def process_links(links: List[Link], edge: Edge, target: Location,
     edge_entity = 1
     for link in links:
         link_edge = link.aut_feat[0].edge
+        link_loc = link.aut_feat[0].loc
         link_entity = link.skg_feat[0].entity
         if link_edge is not None and link_edge.label == sync:
             edge_entity = entity_to_int[link_entity.entity_id]
+        if link_loc is not None and target.name == link_loc.name:
+            loc_entity = entity_to_int[link_entity.entity_id]
 
     return loc_entity, edge_entity
 
