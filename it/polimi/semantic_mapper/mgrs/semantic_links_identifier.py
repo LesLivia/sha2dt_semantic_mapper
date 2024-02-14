@@ -2,11 +2,11 @@ import configparser
 import json
 from typing import List, Dict, Tuple, Any
 
-import src.skg2automata.mgrs.skg_connector as conn
+import src.skg_connector.mgrs.connector_mgr as conn
 from it.polimi.semantic_mapper.logger.logger import Logger
 from it.polimi.semantic_mapper.model.semantic_link import Link, Automaton_Feature, SKG_Feature
-from src.skg2automata.mgrs.skg_reader import Skg_Reader
-from src.skg2automata.model.automata import Automaton, Location
+from src.skg_connector.mgrs.skg_reader import Skg_Reader
+from src.skg_connector.model.automata import Automaton, Location
 
 LOGGER = Logger('Identifier')
 

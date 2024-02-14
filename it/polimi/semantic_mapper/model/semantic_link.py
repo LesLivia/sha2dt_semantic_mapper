@@ -1,7 +1,7 @@
 from typing import List
 
-from src.skg2automata.model.automata import Location, Edge
-from src.skg2automata.model.schema import Entity, Activity
+from src.skg_connector.model.automata import Location, Edge
+from src.skg_connector.model.schema import Entity, Activity
 
 
 class Automaton_Feature:
