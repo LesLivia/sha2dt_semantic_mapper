@@ -1,12 +1,12 @@
 import configparser
 
-import src.skg_connector.mgrs.connector_mgr as conn
-from it.polimi.semantic_mapper.logger.logger import Logger
-from it.polimi.semantic_mapper.mgrs.dot2sha import parse_sha
-from it.polimi.semantic_mapper.mgrs.semantic_links_identifier import Identifier
-from it.polimi.semantic_mapper.mgrs.sha2upp import generate_upp_model
-from src.skg_connector.mgrs.skg_writer import Skg_Writer
-from src.skg_connector.model.automata import Automaton
+import skg_mgrs.connector_mgr as conn
+from semantic_logger.logger import Logger
+from semantic_mgrs.dot2sha import parse_sha
+from semantic_mgrs.semantic_links_identifier import Identifier
+from semantic_mgrs.sha2upp import generate_upp_model
+from skg_mgrs.skg_writer import Skg_Writer
+from skg_model.automata import Automaton
 
 config = configparser.ConfigParser()
 config.read('resources/config/config.ini')

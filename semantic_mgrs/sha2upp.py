@@ -1,9 +1,9 @@
 import configparser
 from typing import List, Dict
 
-from it.polimi.semantic_mapper.logger.logger import Logger
-from it.polimi.semantic_mapper.model.semantic_link import Link
-from it.polimi.semantic_mapper.model.sha import SHA, Edge, Location
+from semantic_logger.logger import Logger
+from semantic_model.semantic_link import Link
+from semantic_model.sha import SHA, Edge, Location
 
 config = configparser.ConfigParser()
 config.sections()
@@ -113,7 +113,7 @@ def generate_query_file(name: str):
 
 
 def generate_upp_model(learned_sha: SHA, name: str, links: List[Link]):
-    LOGGER.info("Starting Uppaal model generation...")
+    LOGGER.info("Starting Uppaal semantic_model generation...")
 
     # Learned SHA Management
 
@@ -134,7 +134,7 @@ def generate_upp_model(learned_sha: SHA, name: str, links: List[Link]):
     with open(SAVE_PATH + name + '.xml', 'w') as new_model:
         new_model.write(nta_tplt)
 
-    LOGGER.info('Uppaal model successfully created.')
+    LOGGER.info('Uppaal semantic_model successfully created.')
 
     generate_query_file(name)
 

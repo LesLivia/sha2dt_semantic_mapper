@@ -1,7 +1,7 @@
 from typing import Set
 
-from it.polimi.semantic_mapper.logger.logger import Logger
-from it.polimi.semantic_mapper.model.sha import SHA, Location, Edge
+from semantic_logger.logger import Logger
+from semantic_model.sha import SHA, Location, Edge
 
 LOGGER = Logger('Dot2Uppaal')
 
