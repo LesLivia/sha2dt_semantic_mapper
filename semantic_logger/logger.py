@@ -1,10 +1,14 @@
 import configparser
+import os
 from datetime import datetime
 from enum import Enum
 
 config = configparser.ConfigParser()
-config.read('resources/config/config.ini')
-config.sections()
+if 'submodules' in os.listdir():
+    curr_path = os.getcwd() + '/submodules/sha2dt_semantic_mapper'
+else:
+    curr_path = os.getcwd().split('src/sha2dt_semantic_mapper')[0]
+config.read('{}/resources/config/config.ini'.format(curr_path))
 
 
 class LogLevel(Enum):
