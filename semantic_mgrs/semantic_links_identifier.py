@@ -3,11 +3,11 @@ import json
 import os
 from typing import List, Dict, Tuple, Any
 
-import skg_mgrs.connector_mgr as conn
+import skg_main.skg_mgrs.connector_mgr as conn
 from semantic_logger.logger import Logger
 from semantic_model.semantic_link import Link, Automaton_Feature, SKG_Feature
-from skg_mgrs.skg_reader import Skg_Reader
-from skg_model.automata import Automaton, Location
+from skg_main.skg_mgrs.skg_reader import Skg_Reader
+from skg_main.skg_model.automata import Automaton, Location
 
 LOGGER = Logger('Identifier')
 

@@ -1,11 +1,11 @@
 import configparser
 import os
 
-import skg_mgrs.connector_mgr as conn
+import skg_main.skg_mgrs.connector_mgr as conn
 from semantic_logger.logger import Logger
 from semantic_mgrs.semantic_links_identifier import Identifier
-from skg_mgrs.skg_writer import Skg_Writer
-from skg_model.automata import Automaton
+from skg_main.skg_mgrs.skg_writer import Skg_Writer
+from skg_main.skg_model.automata import Automaton
 
 config = configparser.ConfigParser()
 if 'submodules' in os.listdir():
