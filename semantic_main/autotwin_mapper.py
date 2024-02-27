@@ -8,11 +8,7 @@ from skg_mgrs.skg_writer import Skg_Writer
 from skg_model.automata import Automaton
 
 config = configparser.ConfigParser()
-if 'submodules' in os.listdir():
-    curr_path = os.getcwd() + '/submodules/sha2dt_semantic_mapper'
-else:
-    curr_path = os.getcwd().split('src/sha2dt_semantic_mapper')[0]
-config.read('{}/resources/config/config.ini'.format(curr_path))
+config.read('{}/config/config.ini'.format(os.environ['SEM_RES_PATH']))
 config.sections()
 
 LOGGER = Logger('Main')

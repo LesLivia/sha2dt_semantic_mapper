@@ -4,21 +4,17 @@ import os
 from typing import List, Dict, Tuple, Any
 
 import skg_mgrs.connector_mgr as conn
-from semantic_logger.logger import Logger
-from semantic_model.semantic_link import Link, Automaton_Feature, SKG_Feature
+from semantic_main.semantic_logger.logger import Logger
+from semantic_main.semantic_model.semantic_link import Link, Automaton_Feature, SKG_Feature
 from skg_mgrs.skg_reader import Skg_Reader
 from skg_model.automata import Automaton, Location
 
 LOGGER = Logger('Identifier')
 
 config = configparser.ConfigParser()
-if 'submodules' in os.listdir():
-    curr_path = os.getcwd() + '/submodules/sha2dt_semantic_mapper'
-else:
-    curr_path = os.getcwd().split('src/sha2dt_semantic_mapper')[0]
-config.read('{}/resources/config/config.ini'.format(curr_path))
+config.read('{}/config/config.ini'.format(os.environ['SEM_RES_PATH']))
 
-LINKS_PATH = config['LINKS']['links.config'].format(curr_path)
+LINKS_PATH = config['LINKS']['links.config'].format(os.environ['SEM_RES_PATH'])
 LINKS_CONFIG = json.load(open(LINKS_PATH))
 
 

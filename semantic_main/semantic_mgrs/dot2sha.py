@@ -1,7 +1,7 @@
 from typing import Set
 
-from semantic_logger.logger import Logger
-from semantic_model.sha import SHA, Location, Edge
+from semantic_main.semantic_logger.logger import Logger
+from semantic_main.semantic_model.sha import SHA, Location, Edge
 
 LOGGER = Logger('Dot2Uppaal')
 

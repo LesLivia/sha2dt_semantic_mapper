@@ -1,13 +1,14 @@
 import configparser
+import os
 from typing import List, Dict
 
-from semantic_logger.logger import Logger
-from semantic_model.semantic_link import Link
-from semantic_model.sha import SHA, Edge, Location
+from semantic_main.semantic_logger.logger import Logger
+from semantic_main.semantic_model.semantic_link import Link
+from semantic_main.semantic_model.sha import SHA, Edge, Location
 
 config = configparser.ConfigParser()
 config.sections()
-config.read('./resources/config/config.ini')
+config.read('{}/config/config.ini'.format(os.environ['SEM_RES_PATH']))
 config.sections()
 
 N = 10
