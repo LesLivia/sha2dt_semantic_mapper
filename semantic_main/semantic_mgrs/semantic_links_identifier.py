@@ -31,7 +31,8 @@ class Identifier:
         else:
             AUTOMATON_NAME = automaton_name
 
-        AUTOMATON_META_PATH = config['AUTOMATON']['automaton.meta.path'].format(AUTOMATON_NAME)
+        AUTOMATON_META_PATH = config['AUTOMATON']['automaton.meta.path'].format(os.environ['RES_PATH'],
+                                                                                AUTOMATON_NAME)
 
         with open(AUTOMATON_META_PATH) as auto_meta:
             lines = auto_meta.readlines()

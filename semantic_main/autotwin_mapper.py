@@ -2,8 +2,8 @@ import configparser
 import os
 
 import skg_main.skg_mgrs.connector_mgr as conn
-from semantic_logger.logger import Logger
-from semantic_mgrs.semantic_links_identifier import Identifier
+from semantic_main.semantic_logger.logger import Logger
+from semantic_main.semantic_mgrs.semantic_links_identifier import Identifier
 from skg_main.skg_mgrs.skg_writer import Skg_Writer
 from skg_main.skg_model.automata import Automaton
 
@@ -20,7 +20,7 @@ def write_semantic_links(name: str = None):
     if name is None:
         name = AUTOMATON_NAME
 
-    AUTOMATON_PATH = config['AUTOMATON']['automaton.graph.path'].format(name)
+    AUTOMATON_PATH = config['AUTOMATON']['automaton.graph.path'].format(os.environ['RES_PATH'], name)
 
     AUTOMATON = Automaton(name, AUTOMATON_PATH)
 

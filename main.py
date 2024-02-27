@@ -1,4 +1,5 @@
 import configparser
+import os
 
 import skg_main.skg_mgrs.connector_mgr as conn
 from semantic_main.semantic_logger.logger import Logger
@@ -12,7 +13,8 @@ config = configparser.ConfigParser()
 config.read('resources/config/config.ini')
 config.sections()
 AUTOMATON_NAME = config['AUTOMATON']['automaton.name']
-AUTOMATON_PATH = config['AUTOMATON']['automaton.graph.path'].format(AUTOMATON_NAME)
+AUTOMATON_PATH = config['AUTOMATON']['automaton.graph.path'].format(os.environ['RES_PATH'],
+                                                                    AUTOMATON_NAME)
 
 LOGGER = Logger('Main')
 
