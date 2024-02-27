@@ -1,12 +1,12 @@
 import configparser
 
-import skg_mgrs.connector_mgr as conn
+import skg_main.skg_mgrs.connector_mgr as conn
 from semantic_main.semantic_logger.logger import Logger
 from semantic_main.semantic_mgrs.dot2sha import parse_sha
 from semantic_main.semantic_mgrs.semantic_links_identifier import Identifier
 from semantic_main.semantic_mgrs.sha2upp import generate_upp_model
-from skg_mgrs.skg_writer import Skg_Writer
-from skg_model.automata import Automaton
+from skg_main.skg_mgrs.skg_writer import Skg_Writer
+from skg_main.skg_model.automata import Automaton
 
 config = configparser.ConfigParser()
 config.read('resources/config/config.ini')
