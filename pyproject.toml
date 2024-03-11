@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sha2dt-semantic-mapper"
-version = "0.1.0"
+version = "0.1.1"
 description = "Module to create semantic links between learned SHA features and existing SKG entities"
 authors = ["livialestingi <livia.lestingi@polimi.it>"]
 readme = "README.md"
@@ -11,7 +11,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-neo4j = "^5.17.0"
+neo4j = "^5.18.0"
 graphviz = "^0.20.1"
 pygraphviz = "^1.12"
 

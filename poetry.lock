@@ -18,12 +18,12 @@ test = ["coverage", "mock (>=4)", "pytest (>=7)", "pytest-cov", "pytest-mock (>=
 
 [[package]]
 name = "neo4j"
-version = "5.17.0"
+version = "5.18.0"
 description = "Neo4j Bolt driver for Python"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "neo4j-5.17.0.tar.gz", hash = "sha256:dcd7150a0c3834a89a6e27505e614f340376f31c97c48ba60dc70a220ee85e3b"},
+    {file = "neo4j-5.18.0.tar.gz", hash = "sha256:4014406ae5b8b485a8ba46c9f00b6f5b4aaf88e7c3a50603445030c2aab701c9"},
 ]
 
 [package.dependencies]
@@ -58,4 +58,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "915cab7c7d5661df719d587206b81722383da71685b52580526cef99b03fbba6"
+content-hash = "040b0f75f44aab8cfeab4c75082239d534742e0add33c133e00021b6ffa208da"
