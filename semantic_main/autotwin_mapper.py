@@ -14,7 +14,7 @@ config.sections()
 LOGGER = Logger('Main')
 
 
-def write_semantic_links(name: str = None):
+def write_semantic_links(name: str = None, pov: str = None, start=None, end=None):
     AUTOMATON_NAME = config['AUTOMATON']['automaton.name']
 
     if name is None:
@@ -35,10 +35,12 @@ def write_semantic_links(name: str = None):
     for link in links:
         if link.aut_feat[0].edge is not None:
             writer.create_semantic_link(AUTOMATON, name=link.name, edge=link.aut_feat[0].edge,
-                                        ent=link.skg_feat[0].entity, entity_labels=['Sensor'])
+                                        ent=link.skg_feat[0].entity, entity_labels=['Sensor'],
+                                        pov=pov, start=start, end=end)
         else:
             writer.create_semantic_link(AUTOMATON, name=link.name, loc=link.aut_feat[0].loc,
-                                        ent=link.skg_feat[0].entity, entity_labels=['Station'])
+                                        ent=link.skg_feat[0].entity, entity_labels=['Station'],
+                                        pov=pov, start=start, end=end)
 
     driver.close()
 
