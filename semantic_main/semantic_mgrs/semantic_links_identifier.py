@@ -14,7 +14,7 @@ LOGGER = Logger('Identifier')
 config = configparser.ConfigParser()
 config.read('{}/config/config.ini'.format(os.environ['SEM_RES_PATH']))
 
-LINKS_PATH = config['LINKS']['links.config'].format(os.environ['SEM_RES_PATH'])
+LINKS_PATH = config['LINKS']['links.config'].format(os.environ['SEM_RES_PATH'], os.environ['NEO4J_SCHEMA'])
 LINKS_CONFIG = json.load(open(LINKS_PATH))
 
 
@@ -22,7 +22,7 @@ class Identifier:
     def __init__(self, a: Automaton):
         self.automaton = a
 
-    def identify_edge_links(self, to: str, name: str, format_str: str, automaton_name: str = None):
+    def identify_edge_links(self, to: str, name: str, format_str: str, automaton_name: str = None, to_attr=None):
         edge_links: List[Link] = []
         labels_dict: Dict[str, str] = {}
 
@@ -49,14 +49,18 @@ class Identifier:
         reader: Skg_Reader = Skg_Reader(driver)
         if to.lower() == 'activity':
             target_entities = reader.get_activities()
-        elif to.lower() == 'sensor':
-            target_entities = reader.get_entities_by_labels(['Sensor'])
+        else:
+            target_entities = reader.get_entities_by_labels([to])
 
         for edge in self.automaton.edges:
             if to.lower() == 'activity':
                 target = [e for e in target_entities if e.act == labels_dict[edge.label]]
-            elif to.lower() == 'sensor':
-                target = [e for e in target_entities if format_str.format(e.entity_id) == labels_dict[edge.label]]
+            else:
+                if to_attr is None:
+                    target = [e for e in target_entities if format_str.format(e.entity_id) == labels_dict[edge.label]]
+                else:
+                    target = [e for e in target_entities if
+                              format_str.format(e.extra_attr[to_attr]) == labels_dict[edge.label]]
 
             if len(target) <= 0:
                 LOGGER.error('Cannot establish link for {}.'.format(edge.label))
@@ -64,7 +68,7 @@ class Identifier:
                 auto_feat = Automaton_Feature(e=edge)
                 if to.lower() == 'activity':
                     skg_feat = SKG_Feature(a=target[0])
-                elif to.lower() == 'sensor':
+                else:
                     skg_feat = SKG_Feature(e=target[0])
                 edge_links.append(Link(name, [auto_feat], [skg_feat]))
 
@@ -95,12 +99,12 @@ class Identifier:
                     break
 
         for pair in loc_to_act:
-            if edge_to.lower() == 'sensor':
-                target_entity = reader.get_related_entities(edge_to, to, filter1=pair[1].entity_id, limit=1)[0][0]
-                loc_links.append(Link(name, [Automaton_Feature(l=pair[0])], [SKG_Feature(e=target_entity)]))
-            elif edge_to.lower() == 'activity':
+            if edge_to.lower() == 'activity':
                 target_entity = reader.get_related_entities(edge_to, to, filter1=pair[1].act, limit=1)[0][0]
                 loc_links.append(Link(name, [Automaton_Feature(l=pair[0])], [SKG_Feature(a=target_entity)]))
+            else:
+                target_entity = reader.get_related_entities(edge_to, to, filter1=pair[1].entity_id, limit=1)[0][0]
+                loc_links.append(Link(name, [Automaton_Feature(l=pair[0])], [SKG_Feature(e=target_entity)]))
 
         return loc_links
 
@@ -112,8 +116,12 @@ class Identifier:
         for mapping in LINKS_CONFIG['fixed_links']:
             if mapping['from'].lower() == 'edge':
                 edge_to = mapping['to']
-                edge_links = self.identify_edge_links(mapping['to'], mapping['rel_name'], mapping['format'],
-                                                      automaton_name)
+                if 'to_attr' in mapping:
+                    edge_links = self.identify_edge_links(mapping['to'], mapping['rel_name'], mapping['format'],
+                                                          automaton_name, mapping['to_attr'])
+                else:
+                    edge_links = self.identify_edge_links(mapping['to'], mapping['rel_name'], mapping['format'],
+                                                          automaton_name)
                 links.extend(edge_links)
             elif mapping['from'].lower() == 'location':
                 links.extend(self.identify_location_links(mapping['to'], mapping['rel_name'], edge_to, edge_links))

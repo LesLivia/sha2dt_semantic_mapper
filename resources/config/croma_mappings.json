@@ -1,0 +1,11 @@
+{
+  "fixed_links": [
+    {
+      "rel_name": "LABELED_BY",
+      "from": "edge",
+      "to": "Checkpoint",
+      "to_attr": "sysId",
+      "format": "{}"
+    }
+  ]
+}
