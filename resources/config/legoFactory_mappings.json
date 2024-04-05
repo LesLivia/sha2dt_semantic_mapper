@@ -1,0 +1,15 @@
+{
+  "fixed_links": [
+    {
+      "rel_name": "LABELED_BY",
+      "from": "edge",
+      "to": "Sensor",
+      "format": "Pass Sensor {}"
+    },
+    {
+      "rel_name": "MODELS",
+      "from": "location",
+      "to": "Station"
+    }
+  ]
+}
