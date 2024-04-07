@@ -2,9 +2,11 @@ import configparser
 import os
 from typing import List, Dict
 
+import skg_main.skg_mgrs.connector_mgr as conn
 from semantic_main.semantic_logger.logger import Logger
 from semantic_main.semantic_model.semantic_link import Link
 from semantic_main.semantic_model.sha import SHA, Edge, Location
+from skg_main.skg_mgrs.skg_reader import Skg_Reader
 
 config = configparser.ConfigParser()
 config.sections()
@@ -20,8 +22,10 @@ NTA_TPLT_PATH = config['MODEL GENERATION']['tplt.path']
 NTA_TPLT_NAME = 'nta_template.xml'
 MACHINE_TPLT_NAME = 'sha_template.xml'
 
+INVARIANT_FUN = config['AUTOMATON']['invariant.merge']
+
 LOCATION_TPLT = """<location id="{}" x="{}" y="{}">\n\t<name x="{}" y="{}">{}</name>\n
-<label kind="exponentialrate" x="{}" y="{}">1</label>
+<label kind="invariant" x="{}" y="{}">{}</label>
 </location>\n"""
 
 QUERY_TPLT = """E[<=TAU;{}](max: m_1.E)\nsimulate[<=TAU; {}]{m_1.w, m_1.P, m_1.E}"""
@@ -33,8 +37,9 @@ Y_START = 0
 Y_RANGE = 300
 
 EDGE_TPLT = """<transition>\n\t<source ref="{}"/>\n\t<target ref="{}"/>
+\t<label kind="guard" x="{}" y="{}">{}</label>\n
 \t<label kind="synchronisation" x="{}" y="{}">{}</label>\n
-\t<label kind="assignment" x="{}" y="{}">update_entities({}, {})</label>\n
+\t<label kind="assignment" x="{}" y="{}">{}</label>\n
 </transition>"""
 
 SAVE_PATH = config['MODEL GENERATION']['save.path'].format(os.environ['SEM_RES_PATH'])
@@ -62,7 +67,25 @@ def get_dicts(links: List[Link]):
     return {x: i for i, x in enumerate(ent_list)}
 
 
-def sha_to_upp_tplt(learned_sha: SHA, links: List[Link]):
+def get_time_distr(name: str, start: int, end: int, loc_name: str):
+    driver = conn.get_driver()
+    reader: Skg_Reader = Skg_Reader(driver)
+
+    formulae = reader.get_invariants(name, start, end, loc_name)
+    x_mean = 0.0
+    x_std = 0.0
+    for i, f in enumerate(formulae):
+        if INVARIANT_FUN.upper() == 'AVG':
+            x_mean = (x_mean * i + f.params['mean']) / (i + 1)
+            x_std = (x_std * i + f.params['std']) / (i + 1)
+
+    upp_th = x_mean + x_std
+    low_th = x_mean - x_std
+
+    return low_th / 100 / 60, upp_th / 100 / 60
+
+
+def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: List[Link]):
     machine_path = (NTA_TPLT_PATH + MACHINE_TPLT_NAME).format(os.environ['SEM_RES_PATH'])
     with open(machine_path, 'r') as machine_tplt:
         lines = machine_tplt.readlines()
@@ -72,7 +95,10 @@ def sha_to_upp_tplt(learned_sha: SHA, links: List[Link]):
     x = X_START
     y = Y_START
     for loc in learned_sha.locations:
-        new_loc_str = LOCATION_TPLT.format('id' + str(loc.id), x, y, x, y - 20, loc.name, x, y - 30, x, y - 35)
+        invariant = "x &lt;= {:.2f}".format(get_time_distr(name, start, end, loc.name)[1])
+
+        new_loc_str = LOCATION_TPLT.format('id' + str(loc.id), x, y, x, y - 20, loc.name,
+                                           x, y - 30, invariant)
 
         loc.x = x
         loc.y = y
@@ -97,8 +123,19 @@ def sha_to_upp_tplt(learned_sha: SHA, links: List[Link]):
         mid_y = abs(y1 - y2) / 2 + min(y1, y2)
 
         link_params = process_links(links, edge, edge.dest, get_dicts(links))
-        new_edge_str = EDGE_TPLT.format(start_id, dest_id, mid_x, mid_y, edge.sync, mid_x,
-                                        mid_y + 10, link_params[0], link_params[1])
+        link_params_start = process_links(links, edge, edge.start, get_dicts(links))
+
+        if link_params[0] != link_params_start[0]:
+            guard = "x &gt;= {:.2f}".format(get_time_distr(name, start, end, edge.start.name)[0])
+            update = "update_entities({}, {}), x=0".format(link_params[0], link_params[1])
+        else:
+            guard = "true"
+            update = "update_entities({}, {})".format(link_params[0], link_params[1])
+
+        new_edge_str = EDGE_TPLT.format(start_id, dest_id,
+                                        mid_x, mid_y, guard,
+                                        mid_x, mid_y + 5, edge.sync,
+                                        mid_x, mid_y + 10, update)
         edges_str += new_edge_str
     learned_sha_tplt = learned_sha_tplt.replace('**TRANSITIONS**', edges_str)
 
@@ -113,12 +150,12 @@ def generate_query_file(name: str):
         q_file.write(QUERY_TPLT.replace('{}', str(N)))
 
 
-def generate_upp_model(learned_sha: SHA, name: str, links: List[Link]):
+def generate_upp_model(learned_sha: SHA, name: str, start: int, end: int, links: List[Link]):
     LOGGER.info("Starting Uppaal semantic_model generation...")
 
     # Learned SHA Management
 
-    learned_sha_tplt = sha_to_upp_tplt(learned_sha, links)
+    learned_sha_tplt = sha_to_upp_tplt(learned_sha, name, start, end, links)
 
     nta_path = (NTA_TPLT_PATH + NTA_TPLT_NAME).format(os.environ['SEM_RES_PATH'])
     with open(nta_path, 'r') as nta_tplt:

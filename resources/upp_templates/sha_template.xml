@@ -1,6 +1,8 @@
 <template>
 <name>DiscoveredSystem</name>
 <declaration>
+clock x;
+
 int loc_entity = 0;
 int edge_entity = 0;
 

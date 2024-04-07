@@ -16,6 +16,9 @@ class Location:
         self.x = None
         self.y = None
 
+    def set_res_id(self, res_id: str):
+        self.res_id = res_id
+
     def __str__(self):
         return LOCATION_FORMATTER.format(self.id)
 
@@ -46,6 +49,9 @@ class Edge:
         self.guard = guard
         self.sync = sync
         self.update = update
+
+    def set_sensor_id(self, s_id: str):
+        self.sensor_id = s_id
 
     def __str__(self):
         return '{} -> {}: {}, {}, {}'.format(str(self.start), str(self.dest), self.guard, self.sync, self.update)
