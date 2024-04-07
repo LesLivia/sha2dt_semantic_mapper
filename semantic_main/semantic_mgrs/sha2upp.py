@@ -37,7 +37,7 @@ EDGE_TPLT = """<transition>\n\t<source ref="{}"/>\n\t<target ref="{}"/>
 \t<label kind="assignment" x="{}" y="{}">update_entities({}, {})</label>\n
 </transition>"""
 
-SAVE_PATH = config['MODEL GENERATION']['save.path']
+SAVE_PATH = config['MODEL GENERATION']['save.path'].format(os.environ['SEM_RES_PATH'])
 
 
 def process_links(links: List[Link], edge: Edge, target: Location,
@@ -63,7 +63,7 @@ def get_dicts(links: List[Link]):
 
 
 def sha_to_upp_tplt(learned_sha: SHA, links: List[Link]):
-    machine_path = NTA_TPLT_PATH + MACHINE_TPLT_NAME
+    machine_path = (NTA_TPLT_PATH + MACHINE_TPLT_NAME).format(os.environ['SEM_RES_PATH'])
     with open(machine_path, 'r') as machine_tplt:
         lines = machine_tplt.readlines()
         learned_sha_tplt = ''.join(lines)
@@ -120,7 +120,7 @@ def generate_upp_model(learned_sha: SHA, name: str, links: List[Link]):
 
     learned_sha_tplt = sha_to_upp_tplt(learned_sha, links)
 
-    nta_path = NTA_TPLT_PATH + NTA_TPLT_NAME
+    nta_path = (NTA_TPLT_PATH + NTA_TPLT_NAME).format(os.environ['SEM_RES_PATH'])
     with open(nta_path, 'r') as nta_tplt:
         lines = nta_tplt.readlines()
         nta_tplt = ''.join(lines)

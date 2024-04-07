@@ -1,6 +1,7 @@
 import configparser
 import json
 import os
+import sys
 
 import skg_main.skg_mgrs.connector_mgr as conn
 from semantic_main.semantic_logger.logger import Logger
@@ -22,7 +23,7 @@ LINKS_CONFIG = json.load(open(LINKS_PATH))
 
 
 def write_semantic_links(name: str = None, pov: str = None, start=None, end=None):
-    AUTOMATON_NAME = config['AUTOMATON']['automaton.name']
+    AUTOMATON_NAME = sys.argv[1]
 
     if name is None:
         name = AUTOMATON_NAME

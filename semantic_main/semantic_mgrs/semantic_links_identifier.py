@@ -1,6 +1,7 @@
 import configparser
 import json
 import os
+import sys
 from typing import List, Dict, Tuple, Any
 
 import skg_main.skg_mgrs.connector_mgr as conn
@@ -27,7 +28,7 @@ class Identifier:
         labels_dict: Dict[str, str] = {}
 
         if automaton_name is None:
-            AUTOMATON_NAME = config['AUTOMATON']['automaton.name']
+            AUTOMATON_NAME = sys.argv[1]
         else:
             AUTOMATON_NAME = automaton_name
 
