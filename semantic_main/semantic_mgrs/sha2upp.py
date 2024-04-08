@@ -1,6 +1,6 @@
 import configparser
 import os
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 import skg_main.skg_mgrs.connector_mgr as conn
 from semantic_main.semantic_logger.logger import Logger
@@ -24,7 +24,7 @@ MACHINE_TPLT_NAME = 'sha_template.xml'
 
 INVARIANT_FUN = config['AUTOMATON']['invariant.merge']
 
-LOCATION_TPLT = """<location id="{}" x="{}" y="{}">\n\t<name x="{}" y="{}">{}</name>\n
+LOCATION_TPLT = """<location id="{}" x="{}" y="{}">\n\t<name x="{}" y="{}">{}</name>
 <label kind="invariant" x="{}" y="{}">{}</label>
 </location>\n"""
 
@@ -36,13 +36,23 @@ X_RANGE = 300
 Y_START = 0
 Y_RANGE = 300
 
-EDGE_TPLT = """<transition>\n\t<source ref="{}"/>\n\t<target ref="{}"/>
-\t<label kind="guard" x="{}" y="{}">{}</label>\n
-\t<label kind="synchronisation" x="{}" y="{}">{}</label>\n
-\t<label kind="assignment" x="{}" y="{}">{}</label>\n
+EDGE_TPLT = """\n<transition>\n\t<source ref="{}"/>\n\t<target ref="{}"/>
+\t<label kind="guard" x="{}" y="{}">{}</label>
+\t<label kind="synchronisation" x="{}" y="{}">{}</label>
+\t<label kind="assignment" x="{}" y="{}">{}</label>
 </transition>"""
 
 SAVE_PATH = config['MODEL GENERATION']['save.path'].format(os.environ['SEM_RES_PATH'])
+
+PROB_EDGE_TPLT = """<transition>\n\t<source ref="{}"/>\n\t<target ref="{}"/>
+\t<label kind="guard" x="{}" y="{}">{}</label>
+\t<label kind="synchronisation" x="{}" y="{}">{}</label>
+\t<label kind="assignment" x="{}" y="{}">{}</label>
+\t<label kind="probability" x="{}" y="{}">{}</label></transition>"""
+
+BRANCH_POINT_TPLT = """<branchpoint id="{}" x="{}" y="{}"/>\n"""
+
+BRANCH_POINT_EDGE_TPLT = """"<transition>\n\t<source ref="{}"/>\n\t<target ref="{}"/>\n</transition>"""
 
 
 def process_links(links: List[Link], edge: Edge, target: Location,
@@ -82,7 +92,24 @@ def get_time_distr(name: str, start: int, end: int, loc_name: str):
     upp_th = x_mean + x_std
     low_th = x_mean - x_std
 
+    driver.close()
+
     return low_th / 100 / 60, upp_th / 100 / 60
+
+
+def get_route_info(name: str, start: int, end: int, sync: str, loc_name: str):
+    driver = conn.get_driver()
+    reader: Skg_Reader = Skg_Reader(driver)
+
+    route_info = reader.get_prob_weights(name, start, end, sync, loc_name)
+
+    prob_weight = 0.0 if len(route_info) > 0 else 1.0
+    for i, r in enumerate(route_info):
+        prob_weight = (prob_weight * i + r[0]) / (i + 1)
+
+    driver.close()
+
+    return prob_weight
 
 
 def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: List[Link]):
@@ -112,8 +139,8 @@ def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: Li
         else:
             x = X_START
             y = y + Y_RANGE
-    learned_sha_tplt = learned_sha_tplt.replace('**LOCATIONS**', locations_str)
 
+    req_branch_point: List[Tuple[Edge, float, float, float, str, str]] = []
     edges_str = ''
     for edge in learned_sha.edges:
         start_id = 'id' + str(edge.start.id)
@@ -132,11 +159,36 @@ def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: Li
             guard = "true"
             update = "update_entities({}, {})".format(link_params[0], link_params[1])
 
-        new_edge_str = EDGE_TPLT.format(start_id, dest_id,
-                                        mid_x, mid_y, guard,
-                                        mid_x, mid_y + 5, edge.sync,
-                                        mid_x, mid_y + 10, update)
-        edges_str += new_edge_str
+        route_info = get_route_info(name, start, end, edge.sync.replace("!", ""), edge.start.name)
+
+        if route_info >= 1.0:
+            new_edge_str = EDGE_TPLT.format(start_id, dest_id,
+                                            mid_x, mid_y, guard,
+                                            mid_x, mid_y + 5, edge.sync,
+                                            mid_x, mid_y + 10, update)
+            edges_str += new_edge_str
+        else:
+            req_branch_point.append((edge, mid_x, mid_y, route_info, guard, update))
+
+    conn_sets: Dict[str, int] = {}
+    bp_id = 1000
+    for tup in req_branch_point:
+        if not tup[0].start.name in conn_sets:
+            bp_str = BRANCH_POINT_TPLT.format("id{}".format(bp_id), tup[1], tup[2])
+            locations_str += bp_str
+            bp_edge_str = BRANCH_POINT_EDGE_TPLT.format("id{}".format(tup[0].start.id), "id{}".format(bp_id))
+            edges_str += bp_edge_str
+            conn_sets[tup[0].start.name] = bp_id
+            bp_id += 1
+        edge_str = PROB_EDGE_TPLT.format("id{}".format(conn_sets[tup[0].start.name]),
+                                         "id{}".format(tup[0].dest.id),
+                                         tup[1], tup[2], tup[4],
+                                         tup[1], tup[2] + 5, tup[0].sync,
+                                         tup[1], tup[2] + 10, tup[5],
+                                         tup[1], tup[2] + 15, tup[3])
+        edges_str += edge_str
+
+    learned_sha_tplt = learned_sha_tplt.replace('**LOCATIONS**', locations_str)
     learned_sha_tplt = learned_sha_tplt.replace('**TRANSITIONS**', edges_str)
 
     entity_dict = ['{}: {}'.format(x, get_dicts(links)[x]) for x in get_dicts(links)]
