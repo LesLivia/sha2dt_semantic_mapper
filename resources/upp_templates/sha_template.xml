@@ -3,6 +3,24 @@
 <declaration>
 clock x;
 
+/**
+** Time CDFs
+**/
+
+double Tcdf = 0.0;
+
+**TCDF**
+
+void sample_ecdf(int d) {
+	double pr = random(1.0);
+	int i;
+    bool found = false;
+
+    **SAMPLING_FN**
+
+}
+
+
 int loc_entity = 0;
 int edge_entity = 0;
 

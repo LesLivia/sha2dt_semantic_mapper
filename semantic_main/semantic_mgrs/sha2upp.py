@@ -1,6 +1,9 @@
 import configparser
 import os
+import time
 from typing import List, Dict, Tuple
+
+import matplotlib.pyplot as plt
 
 import skg_main.skg_mgrs.connector_mgr as conn
 from semantic_main.semantic_logger.logger import Logger
@@ -54,6 +57,23 @@ BRANCH_POINT_TPLT = """<branchpoint id="{}" x="{}" y="{}"/>\n"""
 
 BRANCH_POINT_EDGE_TPLT = """"<transition>\n\t<source ref="{}"/>\n\t<target ref="{}"/>\n</transition>"""
 
+TIME_DISTR = """const double ECDFx_{}[{}] = {};
+const double ECDFy_{}[{}] = {};\n
+"""
+
+ECDF_SAMPLING_TPLT = """
+        for(i=0; i &lt; ECDF_SIZES[d]-1 &amp;&amp; not found;i++)
+			if(ECDFy_{}[i] &gt; pr) {{
+                Tcdf = ECDFx_{}[i];
+                found = true;
+            }}
+        if(not found) Tcdf = ECDFx_{}[i];
+"""
+
+FUNC_TPLT = "{} if (d == {}) {{ {} }}"
+
+PLOT_DISTR = config['AUTOMATON']['plot.cdf'].lower() == 'true'
+
 
 def process_links(links: List[Link], edge: Edge, target: Location,
                   entity_to_int: Dict[str, int]):
@@ -89,12 +109,23 @@ def get_time_distr(name: str, start: int, end: int, loc_name: str):
             x_mean = (x_mean * i + f.params['mean']) / (i + 1)
             x_std = (x_std * i + f.params['std']) / (i + 1)
 
+        if PLOT_DISTR and loc_name == 'q_0':
+            fig = plt.figure()
+            plt.plot(f.params['cdfX'], f.params['cdfY'])
+            plt.title(loc_name)
+            plt.show()
+            plt.close(fig)
+            time.sleep(1)
+
     upp_th = x_mean + x_std
     low_th = x_mean - x_std
 
     driver.close()
 
-    return low_th / 100 / 60, upp_th / 100 / 60
+    cdfX = [] if len(formulae) <= 0 else formulae[-1].params['cdfX']
+    cdfY = [] if len(formulae) <= 0 else formulae[-1].params['cdfY']
+
+    return low_th / 100 / 60, upp_th / 100 / 60, cdfX, cdfY
 
 
 def get_route_info(name: str, start: int, end: int, sync: str, loc_name: str):
@@ -121,8 +152,38 @@ def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: Li
     locations_str = ''
     x = X_START
     y = Y_START
-    for loc in learned_sha.locations:
-        invariant = "x &lt;= {:.2f}".format(get_time_distr(name, start, end, loc.name)[1])
+
+    cdf_str = ''
+    sizes_str = 'const int ECDF_SIZES[{}] = {{'.format(len(learned_sha.locations))
+    func_str = ''
+
+    loc_to_distr = {}
+
+    for i, loc in enumerate(learned_sha.locations):
+        time_distr = get_time_distr(name, start, end, loc.name)
+
+        if INVARIANT_FUN.upper() == 'AVG':
+            invariant = "x &lt;= {:.2f}".format(time_distr[1])
+        else:
+            sizes_str += str(len(time_distr[2]))
+            if i != len(learned_sha.locations) - 1:
+                sizes_str += ','
+
+            if len(time_distr[2]) <= 0:
+                invariant = "x &lt;= {:.2f}".format(time_distr[1])
+            else:
+                loc_to_distr[loc.id] = i
+
+                invariant = "x &lt;= Tcdf"
+                x_vals = '{' + ','.join(['{:.1f}'.format(x / 100 / 60) for x in time_distr[2]]) + '}'
+                y_vals = '{' + ','.join(['{:.4f}'.format(x) for x in time_distr[3]]) + '}'
+                cdf_str += TIME_DISTR.format(i, len(time_distr[2]), x_vals,
+                                             i, len(time_distr[3]), y_vals)
+
+                if i == 0:
+                    func_str += FUNC_TPLT.format('', i, ECDF_SAMPLING_TPLT.format(i, i, i))
+                else:
+                    func_str += FUNC_TPLT.format('else', i, ECDF_SAMPLING_TPLT.format(i, i, i))
 
         new_loc_str = LOCATION_TPLT.format('id' + str(loc.id), x, y, x, y - 20, loc.name,
                                            x, y - 30, invariant)
@@ -159,6 +220,9 @@ def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: Li
             guard = "true"
             update = "update_entities({}, {})".format(link_params[0], link_params[1])
 
+        if INVARIANT_FUN.upper() != 'AVG':
+            update += ', sample_ecdf({})'.format(loc_to_distr[edge.dest.id])
+
         route_info = get_route_info(name, start, end, edge.sync.replace("!", ""), edge.start.name)
 
         if route_info >= 1.0:
@@ -190,6 +254,8 @@ def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: Li
 
     learned_sha_tplt = learned_sha_tplt.replace('**LOCATIONS**', locations_str)
     learned_sha_tplt = learned_sha_tplt.replace('**TRANSITIONS**', edges_str)
+    learned_sha_tplt = learned_sha_tplt.replace('**TCDF**', sizes_str + '};\n\n' + cdf_str)
+    learned_sha_tplt = learned_sha_tplt.replace('**SAMPLING_FN**', func_str)
 
     entity_dict = ['{}: {}'.format(x, get_dicts(links)[x]) for x in get_dicts(links)]
     learned_sha_tplt = learned_sha_tplt.replace('**DICT**', '\n'.join(entity_dict))

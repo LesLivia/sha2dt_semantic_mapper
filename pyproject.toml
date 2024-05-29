@@ -14,6 +14,7 @@ python = "^3.10"
 neo4j = "^5.18.0"
 graphviz = "^0.20.1"
 pygraphviz = "^1.12"
+matplotlib = "^3.9.0"
 
 [build-system]
 requires = ["poetry-core"]
