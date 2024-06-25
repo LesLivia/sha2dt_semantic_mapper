@@ -15,9 +15,6 @@ config.sections()
 config.read('{}/config/config.ini'.format(os.environ['SEM_RES_PATH']))
 config.sections()
 
-N = 10
-TAU = 10
-
 LOGGER = Logger('UppaalModelGenerator')
 
 NTA_TPLT_PATH = config['MODEL GENERATION']['tplt.path']
@@ -30,7 +27,9 @@ LOCATION_TPLT = """<location id="{}" x="{}" y="{}">\n\t<name x="{}" y="{}">{}</n
 <label kind="invariant" x="{}" y="{}">{}</label>
 </location>\n"""
 
-QUERY_TPLT = """E[<=TAU;{}](max: m_1.E)\nsimulate[<=TAU; {}]{m_1.w, m_1.P, m_1.E}"""
+N_RUNS = int(config['UPPAAL SETTINGS']['N_RUNS'])
+TAU = int(config['UPPAAL SETTINGS']['TAU'])
+QUERY_TPLT = """E[<={};{}](max: s.coll_Tcdf[{}])\n"""
 
 X_START = 0
 X_MAX = 900
@@ -271,9 +270,17 @@ def sha_to_upp_tplt(learned_sha: SHA, name: str, start, end, links: List[Link]):
     return learned_sha_tplt
 
 
-def generate_query_file(name: str):
-    with open(SAVE_PATH + name + '.q', 'w') as q_file:
-        q_file.write(QUERY_TPLT.replace('{}', str(N)))
+def generate_query_file(name: str, links):
+    query_path = SAVE_PATH + name + '.q'
+    entity_dict = get_dicts(links)
+    lines = set()
+    for link in links:
+        if link.aut_feat[0].loc is not None:
+            lines.add(QUERY_TPLT.format(TAU, N_RUNS, entity_dict[link.skg_feat[0].entity.entity_id]))
+
+    with open(query_path, 'w') as q_file:
+        q_file.write(''.join(list(lines)))
+    return query_path
 
 
 def generate_upp_model(learned_sha: SHA, name: str, start, end, links: List[Link]):
@@ -295,11 +302,15 @@ def generate_upp_model(learned_sha: SHA, name: str, start, end, links: List[Link
     nta_tplt = nta_tplt.replace('**MACHINE**', learned_sha_tplt)
     nta_tplt = nta_tplt.replace('**TAU**', str(TAU))
 
-    with open(SAVE_PATH + name + '.xml', 'w') as new_model:
+    model_path = SAVE_PATH + name + '.xml'
+
+    with open(model_path, 'w') as new_model:
         new_model.write(nta_tplt)
 
     LOGGER.info('Uppaal semantic_model successfully created.')
 
-    generate_query_file(name)
+    query_path = generate_query_file(name, links)
 
     LOGGER.info('Uppaal query file successfully created.')
+
+    return model_path, query_path
