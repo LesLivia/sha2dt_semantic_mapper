@@ -3,13 +3,13 @@
     {
       "rel_name": "LABELED_BY",
       "from": "edge",
-      "to": "Sensor",
+      "to": "MachinePart:Sensor",
       "format": "Pass Sensor {}"
     },
     {
       "rel_name": "MODELS",
       "from": "location",
-      "to": "Station"
+      "to": "Station:Ensemble"
     }
   ]
 }

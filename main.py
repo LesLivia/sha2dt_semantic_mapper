@@ -12,7 +12,7 @@ config = configparser.ConfigParser()
 config.read('resources/config/config.ini')
 config.sections()
 AUTOMATON_NAME = sys.argv[1]
-AUTOMATON_START, AUTOMATON_END = int(sys.argv[2]), int(sys.argv[3])
+AUTOMATON_START, AUTOMATON_END = sys.argv[2], sys.argv[3]
 AUTOMATON_PATH = config['AUTOMATON']['automaton.graph.path'].format(os.environ['RES_PATH'],
                                                                     AUTOMATON_NAME)
 

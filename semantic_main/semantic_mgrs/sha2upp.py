@@ -1,6 +1,5 @@
 import configparser
 import os
-import time
 from typing import List, Dict, Tuple
 
 import matplotlib.pyplot as plt
@@ -109,13 +108,13 @@ def get_time_distr(name: str, start: int, end: int, loc_name: str):
             x_mean = (x_mean * i + f.params['mean']) / (i + 1)
             x_std = (x_std * i + f.params['std']) / (i + 1)
 
-        if PLOT_DISTR and loc_name == 'q_0':
+        if PLOT_DISTR:
             fig = plt.figure()
             plt.plot(f.params['cdfX'], f.params['cdfY'])
             plt.title(loc_name)
-            plt.show()
+            # plt.show()
+            plt.savefig(SAVE_PATH + loc_name + '.png')
             plt.close(fig)
-            time.sleep(1)
 
     upp_th = x_mean + x_std
     low_th = x_mean - x_std
@@ -125,7 +124,10 @@ def get_time_distr(name: str, start: int, end: int, loc_name: str):
     cdfX = [] if len(formulae) <= 0 else formulae[-1].params['cdfX']
     cdfY = [] if len(formulae) <= 0 else formulae[-1].params['cdfY']
 
-    return low_th / 100 / 60, upp_th / 100 / 60, cdfX, cdfY
+    if config['AUTOMATON']['invariant.unit'] == 's':
+        return low_th, upp_th, cdfX, cdfY
+    else:
+        return low_th / 100 / 60, upp_th / 100 / 60, cdfX, cdfY
 
 
 def get_route_info(name: str, start: int, end: int, sync: str, loc_name: str):
@@ -143,7 +145,7 @@ def get_route_info(name: str, start: int, end: int, sync: str, loc_name: str):
     return prob_weight
 
 
-def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: List[Link]):
+def sha_to_upp_tplt(learned_sha: SHA, name: str, start, end, links: List[Link]):
     machine_path = (NTA_TPLT_PATH + MACHINE_TPLT_NAME).format(os.environ['SEM_RES_PATH'])
     with open(machine_path, 'r') as machine_tplt:
         lines = machine_tplt.readlines()
@@ -175,7 +177,10 @@ def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: Li
                 loc_to_distr[loc.id] = i
 
                 invariant = "x &lt;= Tcdf"
-                x_vals = '{' + ','.join(['{:.1f}'.format(x / 100 / 60) for x in time_distr[2]]) + '}'
+                if config['AUTOMATON']['invariant.unit'] == 's':
+                    x_vals = '{' + ','.join(['{:.1f}'.format(x) for x in time_distr[2]]) + '}'
+                else:
+                    x_vals = '{' + ','.join(['{:.1f}'.format(x / 100 / 60) for x in time_distr[2]]) + '}'
                 y_vals = '{' + ','.join(['{:.4f}'.format(x) for x in time_distr[3]]) + '}'
                 cdf_str += TIME_DISTR.format(i, len(time_distr[2]), x_vals,
                                              i, len(time_distr[3]), y_vals)
@@ -215,13 +220,14 @@ def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: Li
 
         if link_params[0] != link_params_start[0]:
             guard = "x &gt;= {:.2f}".format(get_time_distr(name, start, end, edge.start.name)[0])
-            update = "update_entities({}, {}), x=0".format(link_params[0], link_params[1])
+            if INVARIANT_FUN.upper() != 'AVG':
+                update = 'sample_ecdf({})'.format(loc_to_distr[edge.dest.id])
+            else:
+                update = ''
+            update += ", update_entities({}, {}), x=0".format(link_params[0], link_params[1])
         else:
             guard = "true"
             update = "update_entities({}, {})".format(link_params[0], link_params[1])
-
-        if INVARIANT_FUN.upper() != 'AVG':
-            update += ', sample_ecdf({})'.format(loc_to_distr[edge.dest.id])
 
         route_info = get_route_info(name, start, end, edge.sync.replace("!", ""), edge.start.name)
 
@@ -258,6 +264,8 @@ def sha_to_upp_tplt(learned_sha: SHA, name: str, start: int, end: int, links: Li
     learned_sha_tplt = learned_sha_tplt.replace('**SAMPLING_FN**', func_str)
 
     entity_dict = ['{}: {}'.format(x, get_dicts(links)[x]) for x in get_dicts(links)]
+    learned_sha_tplt = learned_sha_tplt.replace('**N_DICT**', str(len(entity_dict)))
+    learned_sha_tplt = learned_sha_tplt.replace('**0.0_N_DICT**', ','.join(['0.0'] * len(entity_dict)))
     learned_sha_tplt = learned_sha_tplt.replace('**DICT**', '\n'.join(entity_dict))
 
     return learned_sha_tplt
@@ -268,7 +276,7 @@ def generate_query_file(name: str):
         q_file.write(QUERY_TPLT.replace('{}', str(N)))
 
 
-def generate_upp_model(learned_sha: SHA, name: str, start: int, end: int, links: List[Link]):
+def generate_upp_model(learned_sha: SHA, name: str, start, end, links: List[Link]):
     LOGGER.info("Starting Uppaal semantic_model generation...")
 
     # Learned SHA Management
