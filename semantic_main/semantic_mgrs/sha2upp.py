@@ -111,7 +111,6 @@ def get_time_distr(name: str, start: int, end: int, loc_name: str):
             fig = plt.figure()
             plt.plot(f.params['cdfX'], f.params['cdfY'])
             plt.title(loc_name)
-            # plt.show()
             plt.savefig(SAVE_PATH + loc_name + '.png')
             plt.close(fig)
 

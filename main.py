@@ -28,6 +28,6 @@ links = links_identifier.identify_semantic_links(sys.argv[1])
 
 sha = parse_sha(AUTOMATON_PATH, AUTOMATON_NAME)
 model_path, query_path = generate_upp_model(sha, AUTOMATON_NAME, AUTOMATON_START, AUTOMATON_END, links)
-validate_uppaal_model(AUTOMATON_NAME, model_path, query_path, links)
+validate_uppaal_model(AUTOMATON_NAME, model_path, query_path, links, AUTOMATON_START, AUTOMATON_END)
 
 LOGGER.info('Done.')

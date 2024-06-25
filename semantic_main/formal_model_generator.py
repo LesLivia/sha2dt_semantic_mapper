@@ -5,7 +5,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 
-from semantic_main.semantic_mgrs.sha2upp import generate_upp_model
+from semantic_main.semantic_mgrs.sha2upp import generate_upp_model, get_time_distr, get_dicts
 
 config = configparser.ConfigParser()
 config.read('./resources/config/config.ini')
@@ -36,7 +36,18 @@ def run_exp(name, model_path, query_path):
     return UPPAAL_OUT_PATH.format(res_name)
 
 
-def validate_uppaal_model(name, model_path, query_path, links):
+def validate_uppaal_model(name, model_path, query_path, links, start, end):
+    time_distrs = dict()
+    res_dict = get_dicts(links)
+    for link in links:
+        if link.aut_feat[0].loc is not None:
+            time_distrs[res_dict[link.skg_feat[0].entity.entity_id]] = get_time_distr(name, start, end,
+                                                                                      link.aut_feat[0].loc.name)
+
+    with open(query_path) as q:
+        lines = q.readlines()
+        entity_order = [int(l.split('Tcdf[')[1].replace('])\n', '')) for l in lines]
+
     out_file = run_exp(name, model_path, query_path)
 
     with open(out_file) as f:
@@ -47,16 +58,20 @@ def validate_uppaal_model(name, model_path, query_path, links):
                       x[1].split(' ')) for x in upp_ecdfs]
         upp_ecdfs = [(list(np.arange(float(x[0].split(',')[0]), float(x[0].split(',')[1]), BIN_W)),
                       [float(y) for y in x[1]]) for x in upp_ecdfs]
-        upp_ecdfs = [(x[0], [sum(x[1][:i]) for i, y in enumerate(x[1])]) for x in upp_ecdfs]
+        upp_ecdfs = [(x[0], [sum(x[1][:i + 1]) / sum(x[1]) for i, y in enumerate(x[1])]) for x in upp_ecdfs]
 
-        for x in upp_ecdfs:
+        for i, x in enumerate(upp_ecdfs):
             if len(x[1]) < len(x[0]):
                 x[1].append(x[1][-1])
             if len(x[0]) < len(x[1]):
-                x[0].append(x[0][-1]+BIN_W)
+                x[0].append(x[0][-1] + BIN_W)
+
+            skg_distr = time_distrs[entity_order[i]]
 
             plt.figure()
             plt.plot(x[0], x[1])
+            plt.plot(skg_distr[2], skg_distr[3])
+            plt.title(entity_order[i])
             plt.show()
 
     return run_exp(name, model_path, query_path)
