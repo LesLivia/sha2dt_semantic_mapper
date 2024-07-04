@@ -4,7 +4,6 @@
       "rel_name": "LABELED_BY",
       "from": "edge",
       "to": "Sensor",
-      "to_attr": "sysId",
       "format": "{}"
     }
   ]
