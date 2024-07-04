@@ -69,9 +69,10 @@ def validate_uppaal_model(name, model_path, query_path, links, start, end):
             skg_distr = time_distrs[entity_order[i]]
 
             plt.figure()
-            plt.plot(x[0], x[1])
-            plt.plot(skg_distr[2], skg_distr[3])
+            plt.plot(x[0], x[1], label='uppaal')
+            plt.plot(skg_distr[2], skg_distr[3], label='skg')
             plt.title(entity_order[i])
+            plt.legend()
             plt.show()
 
     return run_exp(name, model_path, query_path)

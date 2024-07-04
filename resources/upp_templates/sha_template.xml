@@ -33,7 +33,7 @@ double coll_Tcdf[**N_DICT**] = {**0.0_N_DICT**};
 void update_entities(int loc, int edge) {
     loc_entity = loc;
     edge_entity = edge;
-    coll_Tcdf[loc] = Tcdf;
+    if (coll_Tcdf[loc]&lt;=0.0) coll_Tcdf[loc] = Tcdf;
 }
 </declaration>
 **LOCATIONS**<init ref="**INIT_ID**"/>**TRANSITIONS**</template>
