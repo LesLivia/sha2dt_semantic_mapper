@@ -5,10 +5,11 @@ import sys
 from typing import List, Dict, Tuple, Any
 
 import skg_main.skg_mgrs.connector_mgr as conn
-from semantic_main.semantic_logger.logger import Logger
-from semantic_main.semantic_model.semantic_link import Link, Automaton_Feature, SKG_Feature
 from skg_main.skg_mgrs.skg_reader import Skg_Reader
 from skg_main.skg_model.automata import Automaton, Location
+
+from semantic_main.semantic_logger.logger import Logger
+from semantic_main.semantic_model.semantic_link import Link, Automaton_Feature, SKG_Feature
 
 LOGGER = Logger('Identifier')
 
@@ -25,7 +26,8 @@ class Identifier:
     def __init__(self, a: Automaton):
         self.automaton = a
 
-    def identify_edge_links(self, to: str, name: str, format_str: str, automaton_name: str = None, to_attr=None):
+    def identify_edge_links(self, to: str, name: str, format_str: str, automaton_name: str = None,
+                            to_attr=None, path=None):
         edge_links: List[Link] = []
         labels_dict: Dict[str, str] = {}
 
@@ -34,8 +36,7 @@ class Identifier:
         else:
             AUTOMATON_NAME = automaton_name
 
-        AUTOMATON_META_PATH = config['AUTOMATON']['automaton.meta.path'].format(os.environ['RES_PATH'],
-                                                                                AUTOMATON_NAME)
+        AUTOMATON_META_PATH = config['AUTOMATON']['automaton.meta.path'].format(path, AUTOMATON_NAME)
 
         with open(AUTOMATON_META_PATH) as auto_meta:
             lines = auto_meta.readlines()
@@ -111,7 +112,7 @@ class Identifier:
 
         return loc_links
 
-    def identify_semantic_links(self, automaton_name: str = None):
+    def identify_semantic_links(self, automaton_name: str = None, path=None):
         links: List[Link] = []
         edge_links: List[Link] = []
         edge_to = None
@@ -121,10 +122,10 @@ class Identifier:
                 edge_to = mapping['to']
                 if 'to_attr' in mapping:
                     edge_links = self.identify_edge_links(mapping['to'], mapping['rel_name'], mapping['format'],
-                                                          automaton_name, mapping['to_attr'])
+                                                          automaton_name, mapping['to_attr'], path)
                 else:
                     edge_links = self.identify_edge_links(mapping['to'], mapping['rel_name'], mapping['format'],
-                                                          automaton_name)
+                                                          automaton_name, path=path)
                 links.extend(edge_links)
             elif mapping['from'].lower() == 'location':
                 links.extend(self.identify_location_links(mapping['to'], mapping['rel_name'], edge_to, edge_links))

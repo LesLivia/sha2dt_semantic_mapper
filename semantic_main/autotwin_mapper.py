@@ -1,7 +1,6 @@
 import configparser
 import json
 import os
-import sys
 
 import skg_main.skg_mgrs.connector_mgr as conn
 from skg_main.skg_mgrs.skg_writer import Skg_Writer
@@ -26,20 +25,15 @@ LINKS_PATH = config['LINKS']['links.config'].format(
 LINKS_CONFIG = json.load(open(LINKS_PATH))
 
 
-def write_semantic_links(name: str = None, pov: str = None, start=None, end=None):
-    AUTOMATON_NAME = sys.argv[1]
-
-    if name is None:
-        name = AUTOMATON_NAME
-
-    AUTOMATON_PATH = config['AUTOMATON']['automaton.graph.path'].format(os.environ['RES_PATH'], name)
+def write_semantic_links(name: str = None, pov: str = None, start=None, end=None, path=None):
+    AUTOMATON_PATH = config['AUTOMATON']['automaton.graph.path'].format(path, name)
 
     AUTOMATON = Automaton(name, AUTOMATON_PATH)
 
     LOGGER.info('Loaded automaton.')
 
     links_identifier = Identifier(AUTOMATON)
-    links = links_identifier.identify_semantic_links(name)
+    links = links_identifier.identify_semantic_links(name, path)
 
     driver = conn.get_driver()
     writer: Skg_Writer = Skg_Writer(driver)
