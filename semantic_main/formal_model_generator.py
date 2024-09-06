@@ -8,7 +8,8 @@ import numpy as np
 from semantic_main.semantic_mgrs.sha2upp import generate_upp_model, get_time_distr, get_dicts
 
 config = configparser.ConfigParser()
-config.read('./resources/config/config.ini')
+config.read(
+    os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/resources/config/config.ini')
 config.sections()
 
 SCRIPT_PATH = config['UPPAAL SETTINGS']['UPPAAL_SCRIPT_PATH']

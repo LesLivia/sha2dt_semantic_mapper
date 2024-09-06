@@ -4,7 +4,8 @@ from datetime import datetime
 from enum import Enum
 
 config = configparser.ConfigParser()
-config.read('{}/config/config.ini'.format(os.environ['SEM_RES_PATH']))
+config.read(
+    os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/resources/config/config.ini')
 
 
 class LogLevel(Enum):

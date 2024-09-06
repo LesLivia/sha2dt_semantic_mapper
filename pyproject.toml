@@ -16,6 +16,7 @@ graphviz = "^0.20.1"
 pygraphviz = "^1.12"
 matplotlib = "^3.9.0"
 scipy = "^1.14.0"
+skg-connector = "^0.1.6"
 
 [build-system]
 requires = ["poetry-core"]

@@ -3,16 +3,17 @@ import os
 from typing import List, Dict, Tuple
 
 import matplotlib.pyplot as plt
-
 import skg_main.skg_mgrs.connector_mgr as conn
+from skg_main.skg_mgrs.skg_reader import Skg_Reader
+
 from semantic_main.semantic_logger.logger import Logger
 from semantic_main.semantic_model.semantic_link import Link
 from semantic_main.semantic_model.sha import SHA, Edge, Location
-from skg_main.skg_mgrs.skg_reader import Skg_Reader
 
 config = configparser.ConfigParser()
 config.sections()
-config.read('{}/config/config.ini'.format(os.environ['SEM_RES_PATH']))
+config.read(
+    os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/resources/config/config.ini')
 config.sections()
 
 LOGGER = Logger('UppaalModelGenerator')
@@ -43,7 +44,8 @@ EDGE_TPLT = """\n<transition>\n\t<source ref="{}"/>\n\t<target ref="{}"/>
 \t<label kind="assignment" x="{}" y="{}">{}</label>
 </transition>"""
 
-SAVE_PATH = config['MODEL GENERATION']['save.path'].format(os.environ['SEM_RES_PATH'])
+SAVE_PATH = config['MODEL GENERATION']['save.path'].format(
+    os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/')
 
 PROB_EDGE_TPLT = """<transition>\n\t<source ref="{}"/>\n\t<target ref="{}"/>
 \t<label kind="guard" x="{}" y="{}">{}</label>
@@ -144,7 +146,8 @@ def get_route_info(name: str, start: int, end: int, sync: str, loc_name: str):
 
 
 def sha_to_upp_tplt(learned_sha: SHA, name: str, start, end, links: List[Link]):
-    machine_path = (NTA_TPLT_PATH + MACHINE_TPLT_NAME).format(os.environ['SEM_RES_PATH'])
+    machine_path = (NTA_TPLT_PATH + MACHINE_TPLT_NAME).format(
+        os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/')
     with open(machine_path, 'r') as machine_tplt:
         lines = machine_tplt.readlines()
         learned_sha_tplt = ''.join(lines)
@@ -289,7 +292,8 @@ def generate_upp_model(learned_sha: SHA, name: str, start, end, links: List[Link
 
     learned_sha_tplt = sha_to_upp_tplt(learned_sha, name, start, end, links)
 
-    nta_path = (NTA_TPLT_PATH + NTA_TPLT_NAME).format(os.environ['SEM_RES_PATH'])
+    nta_path = (NTA_TPLT_PATH + NTA_TPLT_NAME).format(
+        os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/')
     with open(nta_path, 'r') as nta_tplt:
         lines = nta_tplt.readlines()
         nta_tplt = ''.join(lines)

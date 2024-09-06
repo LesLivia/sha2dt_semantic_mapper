@@ -4,21 +4,25 @@ import os
 import sys
 
 import skg_main.skg_mgrs.connector_mgr as conn
-from semantic_main.semantic_logger.logger import Logger
-from semantic_main.semantic_mgrs.semantic_links_identifier import Identifier
 from skg_main.skg_mgrs.skg_writer import Skg_Writer
 from skg_main.skg_model.automata import Automaton
 
+from semantic_main.semantic_logger.logger import Logger
+from semantic_main.semantic_mgrs.semantic_links_identifier import Identifier
+
 config = configparser.ConfigParser()
-config.read('{}/config/config.ini'.format(os.environ['SEM_RES_PATH']))
+config.read(
+    os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/resources/config/config.ini')
 config.sections()
 
 LOGGER = Logger('Main')
 
 config = configparser.ConfigParser()
-config.read('{}/config/config.ini'.format(os.environ['SEM_RES_PATH']))
+config.read(
+    os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/resources/config/config.ini')
 
-LINKS_PATH = config['LINKS']['links.config'].format(os.environ['SEM_RES_PATH'], os.environ['NEO4J_SCHEMA'])
+LINKS_PATH = config['LINKS']['links.config'].format(
+    os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/', os.environ['NEO4J_SCHEMA'])
 LINKS_CONFIG = json.load(open(LINKS_PATH))
 
 
