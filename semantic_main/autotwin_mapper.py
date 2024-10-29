@@ -20,12 +20,13 @@ config = configparser.ConfigParser()
 config.read(
     os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/resources/config/config.ini')
 
-LINKS_PATH = config['LINKS']['links.config'].format(
-    os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/', os.environ['NEO4J_SCHEMA'])
-LINKS_CONFIG = json.load(open(LINKS_PATH))
-
 
 def write_semantic_links(name: str = None, pov: str = None, start=None, end=None, path=None):
+    LINKS_PATH = config['LINKS']['links.config'].format(
+        os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/',
+        os.environ['NEO4J_SCHEMA'])
+    LINKS_CONFIG = json.load(open(LINKS_PATH))
+
     AUTOMATON_PATH = config['AUTOMATON']['automaton.graph.path'].format(path, name)
 
     AUTOMATON = Automaton(name, AUTOMATON_PATH)

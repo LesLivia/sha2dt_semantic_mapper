@@ -17,14 +17,19 @@ config = configparser.ConfigParser()
 config.read(
     os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/resources/config/config.ini')
 
-LINKS_PATH = config['LINKS']['links.config'].format(
-    os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/', os.environ['NEO4J_SCHEMA'])
-LINKS_CONFIG = json.load(open(LINKS_PATH))
-
 
 class Identifier:
+    def setup(self):
+        LINKS_PATH = config['LINKS']['links.config'].format(
+            os.path.dirname(os.path.abspath(__file__)).split('semantic_main')[0] + 'semantic_main/',
+            os.environ['NEO4J_SCHEMA'])
+        LINKS_CONFIG = json.load(open(LINKS_PATH))
+
+        return LINKS_CONFIG
+
     def __init__(self, a: Automaton):
         self.automaton = a
+        self.LINKS_CONFIG = self.setup()
 
     def identify_edge_links(self, to: str, name: str, format_str: str, automaton_name: str = None,
                             to_attr=None, path=None):
@@ -117,7 +122,7 @@ class Identifier:
         edge_links: List[Link] = []
         edge_to = None
 
-        for mapping in LINKS_CONFIG['fixed_links']:
+        for mapping in self.LINKS_CONFIG['fixed_links']:
             if mapping['from'].lower() == 'edge':
                 edge_to = mapping['to']
                 if 'to_attr' in mapping:
